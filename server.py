@@ -1,39 +1,54 @@
 import socket
 
-# Create a list to store the connections
+# Crie uma lista para armazenar as conexões
 connections = []
 
-# Create a socket object
+# Crie um objeto socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# Bind the socket to a port
-server_address = ("localhost", 8080)
+# Vincule o soquete a uma porta
+server_address = ("localhost", 8081)
 sock.bind(server_address)
 
-# Listen for connections
-sock.listen(1)
+# Ouça conexões
+sock.listen()
+
+def send_message(connection, message):
+    connection.sendall(message.encode())
+
+def receive_message(connection):
+    data = connection.recv(1024)
+    return data.decode()
+
+print("Aguardando conexões...")
 
 while True:
-
-    # Accept a connection
     connection, client_address = sock.accept()
-
-    # Add the connection to the list
     connections.append(connection)
+    print(f"Conexão estabelecida com {client_address}")
 
-    # Receive data from the client
-    data = connection.recv(1024)
+    data = receive_message(connection)
 
-    # Print the data
-    print(data.decode())
+    if data.startswith("from:"):
+        parts = data.split(":")
+        sender_name = parts[1]
+        sender_ip = parts[2]
+        receiver_name = parts[3]
+        receiver_ip = parts[4]
+        message = ":".join(parts[5:])
+        for conn in connections:
+            if conn != connection:
+                send_message(conn, data)
 
-    # Send data back to the client
-    connection.sendall("Hello from the server!".encode())
+    elif data.startswith("register:"):
+        client_name, client_ip = data.split(":")[1:]
+        connections.append((client_name, client_ip))
+        send_message(connection, "Registered!")
 
-    # Send the data to all the other connections
-    for other_connection in connections:
-        if other_connection != connection:
-            other_connection.sendall(data)
+    else:
+        print(data)
 
-    # Close the connection
     connection.close()
+
+# Feche o soquete
+sock.close()
