@@ -30,7 +30,7 @@ while True:
         receiver_name = input("Nome do destinatário: ")
         message = input("Digite a mensagem: ")
         data = f"from:{sender_name}:{client.getsockname()[0]}:{receiver_name}:{server_address[0]}:{message}"
-        send_message(client, data)
+        send_message(client, message)
     elif choice == "2":
         data = receive_message(client)
         print(f"Mensagem do servidor: {data}")
